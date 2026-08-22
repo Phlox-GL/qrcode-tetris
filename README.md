@@ -6,7 +6,7 @@ Phlox workflow in [calcit-js](https://github.com/Quamolit/phlox.calcit)
 
 ```bash
 yarn
-cr --emit-js -1
+calcit calcit.cirru js
 yarn vite
 ```
 
