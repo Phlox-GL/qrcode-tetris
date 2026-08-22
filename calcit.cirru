@@ -3,7 +3,7 @@
   :entries $ {}
     :default $ {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
       :feature-policy $ {}
-      :modules $ [] |memof/ |lilac/ |respo.calcit/ |respo-ui.calcit/ |phlox/
+      :modules $ [] |respo.calcit/ |respo-ui.calcit/ |phlox/
       :type-slots $ {}
   :files $ {}
     |app.comp.container $ %{} 'FileEntry
@@ -95,7 +95,6 @@
             phlox.comp.drag-point :refer $ comp-drag-point
             |shortid :as shortid
             respo-ui.core :as ui
-            memof.alias :refer $ memof-call
             app.config :refer $ grid-size
             phlox.complex :as complex
             app.schema :refer $ shapes-variations
