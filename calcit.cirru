@@ -3,8 +3,7 @@
   :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
   :package |app
   :entries $ {} $ :default
-    {} (:description |) (:init-fn 'app.main/main!) (:mode :native)
-      :reload-fn 'app.main/reload!
+    {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |phlox/
       :type-slots $ {}
@@ -16,19 +15,35 @@
             let
                 cursor $ []
                 states $ option:unwrap-or (get store :states) nil
-                grid $ option:unwrap-or (get store :grid) nil
-                drop-position $ either
-                  option:unwrap-or (get store :drop-position) nil
-                  [] 0 0
-                drop-pick $ either
-                  option:unwrap-or (get store :drop-pick) nil
-                  [] 0 0
-                dropping $ get-in shapes-variations drop-pick
+                grid $ unsafe-coerce
+                  option:unwrap-or (get store :grid) nil
+                  :: 'List $ :: 'List 'Dynamic
+                drop-position $ unsafe-coerce
+                  either
+                    option:unwrap-or (get store :drop-position) nil
+                    [] 0 0
+                  :: 'List 'Number
+                drop-pick $ unsafe-coerce
+                  either
+                    option:unwrap-or (get store :drop-pick) nil
+                    [] 0 0
+                  :: 'List 'Number
+                dropping $ option:unwrap-or (get-in shapes-variations drop-pick) ([])
                 dropping-cells $ if
                   some? $ option:unwrap-or (get store :drop-pick) nil
-                  -> dropping
-                    map $ fn (x) (complex/add drop-position x)
-                    .to-set
+                  reduce
+                    unsafe-coerce
+                      map dropping $ fn (x) (complex/add drop-position x)
+                      :: 'List $ :: 'List 'Number
+                    unsafe-coerce (#{})
+                      :: 'Set $ :: 'List 'Number
+                    fn (acc x)
+                      hint-fn $ {}
+                        :return $ :: 'Set $ :: 'List 'Number
+                        :args $ []
+                          :: 'Set $ :: 'List 'Number
+                          :: 'List 'Number
+                      include acc x
                   #{}
               ; println $ option:unwrap-or (get store :failed?) nil
               container
@@ -37,8 +52,7 @@
                   :position $ [] -300 -300
                   :fill $ hslx 0 0 96
                   :size $ [] 600 600
-                container ({}) & $ ->
-                  option:unwrap-or (get store :grid) nil
+                container ({}) & $ -> grid
                   map-indexed $ fn (row-idx row)
                     -> row $ map-indexed $ fn (col-idx cell)
                       let
@@ -49,7 +63,7 @@
                             * (- row-idx middle-idx) 12
                           :size $ [] 12 12
                           :fill $ cond
-                              .includes? dropping-cells p
+                              contains? dropping-cells p
                               hslx 200 10 50
                             (some? cell)
                               case-default
@@ -68,8 +82,7 @@
                   :position $ [] 340 80
                   :color $ hslx 0 0 100
                   :fill $ hslx 0 0 60
-                  :on-pointertap $ fn (e d!)
-                    js/document.body.requestFullscreen
+                  :on-pointertap $ fn (e d!) (js/document.body.requestFullscreen)
                 if
                   option:unwrap-or (get store :failed?) nil
                   text $ {}
@@ -77,11 +90,15 @@
                     :text |Failed
                     :style $ {} (:font-size 24) (:fill |red) (:font-family "|Josefin Sans")
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Dynamic)
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :features $ #{} :js-ffi
         'concat-all $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn concat-all (xs) (&list:concat & xs)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List (:: 'List 'Dynamic)
+            :return $ :: 'List 'Dynamic
         'middle-idx $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def middle-idx
             * 0.5 $ dec $ phlox.core/ffi-number grid-size
@@ -100,25 +117,27 @@
             app.schema :refer $ shapes-variations
     'app.config $ %{} 'FileEntry
       :defs $ {}
+        'detect-grid-size $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn detect-grid-size ()
+            unsafe-coerce
+              js/parseInt $ option:unwrap-or (get-env |size) |31
+              , 'Number
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Number)
+            :args $ []
+            :features $ #{} :js-ffi
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
             = |dev $ option:unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Dynamic
         'grid-size $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def grid-size
-            js/parseInt $ option:unwrap-or (get-env |size) |31
+          :code $ quote $ def grid-size (detect-grid-size)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
         'site $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def site
-            {}
-              :dev-ui |http://localhost:8100/main.css
-              :release-ui |http://cdn.tiye.me/favored-fonts/main.css
-              :cdn-url |http://cdn.tiye.me/phlox/
-              :title |Phlox
-              :icon |http://cdn.tiye.me/logo/quamolit.png
-              :storage-key |phlox
+            {} (:dev-ui |http://localhost:8100/main.css) (:release-ui |http://cdn.tiye.me/favored-fonts/main.css) (:cdn-url |http://cdn.tiye.me/phlox/) (:title |Phlox) (:icon |http://cdn.tiye.me/logo/quamolit.png) (:storage-key |phlox)
           :examples $ []
           :schema $ :: 'Dynamic
         'tick-interval $ %{} 'CodeEntry (:doc |)
@@ -133,27 +152,31 @@
         '*dispatch-fn $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defatom *dispatch-fn dispatch!
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Ref $ :: 'Fn
+            {} (:return 'Unit)
+              :args $ [] 'Tag 'Dynamic
         '*store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defatom *store schema/store
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Ref $ :: 'Map 'Tag 'Dynamic
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op op-data)
             when
               and dev? $ not= op :states
               println |dispatch! op op-data
             let
-                op-id $ shortid/generate
-                op-time $ js/Date.now
+                op-id $ unsafe-coerce (shortid/generate) 'String
+                op-time $ unsafe-coerce (js/Date.now) 'Number
               reset! *store $ updater @*store op op-data op-id op-time
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ [] 'Tag 'Dynamic
+            :features $ #{} :js-ffi
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
             if dev? $ load-console-formatter!
             phlox.core/ffi-then
-              .!load $ new FontFaceObserver/default "|Josefin Sans"
+              phlox.core/ffi-load-font $ new FontFaceObserver/default "|Josefin Sans"
               fn (event) (render-app!)
             add-watch *store :change $ fn (store prev) (render-app!)
             js/window.addEventListener |resize $ fn (e) (render-app!)
@@ -177,25 +200,26 @@
                 |Enter $ @*dispatch-fn :toggle-pause nil
             println "|App Started"
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
+            :features $ #{} :js-ffi
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
-              do (println "|Code updated.")
-                clear-phlox-caches!
-                reset! *dispatch-fn dispatch!
-                remove-watch *store :change
+              do (println "|Code updated.") (clear-phlox-caches!) (reset! *dispatch-fn dispatch!) (remove-watch *store :change)
                 add-watch *store :change $ fn (store prev) (render-app!)
                 render-app!
                 hud! |ok~ |Ok
               hud! |error build-errors
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
         'render-app! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn render-app! (? arg)
-            render! (comp-container @*store) @*dispatch-fn $ or arg $ {}
+          :code $ quote $ defn render-app! ()
+            render! (comp-container @*store) @*dispatch-fn $ {}
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Unit)
+            :args $ []
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require (|pixi.js :as PIXI)
@@ -215,12 +239,12 @@
           :code $ quote $ def detection-pattern-5
             [] ([] p1 p1 p1 p1 p1) ([] p1 p0 p0 p0 p1) ([] p1 p0 p1 p0 p1) ([] p1 p0 p0 p0 p1) ([] p1 p1 p1 p1 p1)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'List $ :: 'List (:: 'Map 'Tag 'Dynamic)
         'detection-pattern-7 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def detection-pattern-7
             [] ([] p1 p1 p1 p1 p1 p1 p1) ([] p1 p0 p0 p0 p0 p0 p1) ([] p1 p0 p1 p1 p1 p0 p1) ([] p1 p0 p1 p1 p1 p0 p1) ([] p1 p0 p1 p1 p1 p0 p1) ([] p1 p0 p0 p0 p0 p0 p1) ([] p1 p1 p1 p1 p1 p1 p1)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'List $ :: 'List (:: 'Map 'Tag 'Dynamic)
         'gen-qrcode-grid $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn gen-qrcode-grid (size)
             map (range size)
@@ -255,47 +279,50 @@
                           get-in detection-pattern-5 $ [] dy dx
                         true nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] 'Number
+            :return $ :: 'List $ :: 'List 'Dynamic
         'p0 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def p0
             {} (:kind :preset) (:color 0xffffff)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Map 'Tag 'Dynamic
         'p1 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def p1
             {} (:kind :preset) (:color 0x000000)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Map 'Tag 'Dynamic
         'shapes-variations $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def shapes-variations
             []
               []
-                [][] (0 -1) (0 0) (0 1) (0 2)
-                [][] (-1 0) (0 0) (1 0) (2 0)
+                [] ([] 0 -1) ([] 0 0) ([] 0 1) ([] 0 2)
+                [] ([] -1 0) ([] 0 0) ([] 1 0) ([] 2 0)
               []
-                [][] (-1 0) (0 -1) (0 0) (0 1)
-                [][] (-1 0) (0 -1) (0 0) (1 0)
-                [][] (0 -1) (0 0) (0 1) (1 0)
-                [][] (-1 0) (0 0) (0 1) (1 0)
-              [] $ [][] (-1 0) (-1 1) (0 0) (0 1)
+                [] ([] -1 0) ([] 0 -1) ([] 0 0) ([] 0 1)
+                [] ([] -1 0) ([] 0 -1) ([] 0 0) ([] 1 0)
+                [] ([] 0 -1) ([] 0 0) ([] 0 1) ([] 1 0)
+                [] ([] -1 0) ([] 0 0) ([] 0 1) ([] 1 0)
+              [] $ [] ([] -1 0) ([] -1 1) ([] 0 0) ([] 0 1)
               []
-                [][] (-1 -1) (0 -1) (0 0) (0 1)
-                [][] (-1 0) (-1 1) (0 0) (1 0)
-                [][] (1 1) (0 -1) (0 0) (0 1)
-                [][] (-1 0) (1 -1) (0 0) (1 0)
+                [] ([] -1 -1) ([] 0 -1) ([] 0 0) ([] 0 1)
+                [] ([] -1 0) ([] -1 1) ([] 0 0) ([] 1 0)
+                [] ([] 1 1) ([] 0 -1) ([] 0 0) ([] 0 1)
+                [] ([] -1 0) ([] 1 -1) ([] 0 0) ([] 1 0)
               []
-                [][] (-1 1) (0 -1) (0 0) (0 1)
-                [][] (1 1) (-1 0) (0 0) (1 0)
-                [][] (1 -1) (0 -1) (0 0) (0 1)
-                [][] (-1 -1) (-1 0) (0 0) (1 0)
+                [] ([] -1 1) ([] 0 -1) ([] 0 0) ([] 0 1)
+                [] ([] 1 1) ([] -1 0) ([] 0 0) ([] 1 0)
+                [] ([] 1 -1) ([] 0 -1) ([] 0 0) ([] 0 1)
+                [] ([] -1 -1) ([] -1 0) ([] 0 0) ([] 1 0)
               []
-                [][] (-1 0) (-1 1) (0 -1) (0 0)
-                [][] (-1 0) (0 0) (0 1) (1 1)
+                [] ([] -1 0) ([] -1 1) ([] 0 -1) ([] 0 0)
+                [] ([] -1 0) ([] 0 0) ([] 0 1) ([] 1 1)
               []
-                [][] (-1 -1) (-1 0) (0 0) (0 1)
-                [][] (-1 1) (0 1) (0 0) (1 0)
+                [] ([] -1 -1) ([] -1 0) ([] 0 0) ([] 0 1)
+                [] ([] -1 1) ([] 0 1) ([] 0 0) ([] 1 0)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'List $ :: 'List
+            :: 'List $ :: 'List 'Number
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
             {}
@@ -307,7 +334,7 @@
               :drop-pick nil
               :drop-position nil
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Map 'Tag 'Dynamic
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
           :require $ app.config :refer $ grid-size
@@ -316,30 +343,42 @@
         'change-shape $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn change-shape (store)
             let
-                drop-pick $ option:unwrap-or (get store :drop-pick) nil
-                grid $ option:unwrap-or (get store :grid) nil
-                pos $ option:unwrap-or (get store :drop-position) nil
-                shape-variants $ option:unwrap-or
-                  nth shapes-variations $ option:unwrap-or (first drop-pick) 0
-                  repeat nil 0
-                prev $ last drop-pick
-                next-pick $ []
-                  option:unwrap-or (first drop-pick) 0
-                  if
-                    < (inc prev) (count shape-variants)
-                    inc prev
-                    , 0
+                drop-pick $ unsafe-coerce
+                  option:unwrap-or (get store :drop-pick) nil
+                  :: 'List 'Number
+                grid $ unsafe-coerce
+                  option:unwrap-or (get store :grid) nil
+                  :: 'List $ :: 'List 'Dynamic
+                pos $ unsafe-coerce
+                  option:unwrap-or (get store :drop-position) nil
+                  :: 'List 'Number
+                shape-index $ unsafe-coerce
+                  option:unwrap $ first drop-pick
+                  , 'Number
+                shape-variants $ unsafe-coerce
+                  option:unwrap-or (nth shapes-variations shape-index) (repeat nil 0)
+                  :: 'List $ :: 'List 'Number
+                prev $ option:unwrap-or (last drop-pick) 0
+                next-pick $ [] shape-index $ if
+                  < (inc prev) (count shape-variants)
+                  inc prev
+                  , 0
               if (valid-put? next-pick pos grid) (assoc store :drop-pick next-pick) store
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :features $ #{} :js-ffi
+            :return $ :: 'Map 'Tag 'Dynamic
         'collapse-column $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collapse-column (acc col collapsed)
             if (empty? col)
               if (> collapsed 0)
-                concat (repeat nil collapsed) acc
+                concat
+                  unsafe-coerce (repeat nil collapsed) (:: 'List 'Dynamic)
+                  , acc
                 , acc
               let
-                  cursor $ last col
+                  cursor $ option:unwrap-or (last col) nil
                 cond
                     nil? cursor
                     recur (prepend acc nil) (butlast col) collapsed
@@ -348,13 +387,19 @@
                   (= :preset (option:unwrap-or (get cursor :kind) nil))
                     if (> collapsed 0)
                       recur
-                        concat ([] cursor) (repeat nil collapsed) acc
+                        concat
+                          unsafe-coerce ([] cursor) (:: 'List 'Dynamic)
+                          unsafe-coerce (repeat nil collapsed) (:: 'List 'Dynamic)
+                          , acc
                         butlast col
                         , 0
                       recur (prepend acc cursor) (butlast col) collapsed
                   true $ recur (prepend acc cursor) (butlast col) collapsed
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'List 'Dynamic) (:: 'List 'Dynamic) 'Number
+            :features $ #{} :js-ffi
+            :return $ :: 'List 'Dynamic
         'collapse-grid $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collapse-grid (grid)
             if
@@ -367,7 +412,9 @@
                 flip-grid
               , grid
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List (:: 'List 'Dynamic)
+            :return $ :: 'List $ :: 'List 'Dynamic
         'contains-in? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn contains-in? (xs path)
             if (empty? path) true $ let
@@ -385,7 +432,8 @@
                     , false
                 true false
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] 'Dynamic $ :: 'List 'Number
         'detect-collapse $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn detect-collapse (grid)
             apply-args
@@ -413,7 +461,9 @@
                     butlast xs
                     , collapsed-size
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List (:: 'List 'Dynamic)
+            :return $ :: 'List $ :: 'List 'Dynamic
         'drop-shape $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn drop-shape (store)
             let
@@ -424,16 +474,34 @@
                 valid-put?
                   option:unwrap-or (get store :drop-pick) nil
                   , next-pos $ option:unwrap-or (get store :grid) nil
-                -> store (assoc :drop-position next-pos) (update :grid collapse-grid)
                 let
-                    pick $ option:unwrap-or (get store :drop-pick) nil
-                    pos $ option:unwrap-or (get store :drop-position) nil
-                    grid $ option:unwrap-or (get store :grid) nil
-                    real-cells $ ->
-                      get-in shapes-variations pick
-                      map $ fn (cell) (complex/add cell pos)
-                    new-grid $ mark-collapsing $ foldl (.to-list real-cells) grid
+                    next-store $ assoc store :drop-position next-pos
+                    grid $ unsafe-coerce
+                      option:unwrap-or (get next-store :grid) nil
+                      :: 'List $ :: 'List 'Dynamic
+                  assoc next-store :grid $ collapse-grid grid
+                let
+                    pick $ unsafe-coerce
+                      option:unwrap-or (get store :drop-pick) nil
+                      :: 'List 'Number
+                    pos $ unsafe-coerce
+                      option:unwrap-or (get store :drop-position) nil
+                      :: 'List 'Number
+                    grid $ unsafe-coerce
+                      option:unwrap-or (get store :grid) nil
+                      :: 'List $ :: 'List 'Dynamic
+                    real-cells $ unsafe-coerce
+                      map
+                        option:unwrap-or (get-in shapes-variations pick) ([])
+                        fn (cell) (complex/add cell pos)
+                      :: 'List $ :: 'List 'Number
+                    new-grid $ mark-collapsing $ foldl real-cells grid
                       fn (acc pos)
+                        hint-fn $ {}
+                          :return $ :: 'List $ :: 'List 'Dynamic
+                          :args $ []
+                            :: 'List $ :: 'List 'Dynamic
+                            :: 'List 'Number
                         assoc-in acc pos $ {} $ :kind :filled
                   -> store
                     assoc :drop-position $ [] 1 $ * 0.5
@@ -441,13 +509,14 @@
                     assoc :drop-pick $ let
                         a $ rand-int $ count shapes-variations
                         b $ rand-int $ count
-                          option:unwrap-or
-                            nth shapes-variations a
-                            repeat nil 0
+                          option:unwrap-or (nth shapes-variations a) (repeat nil 0)
                       [] a b
                     assoc :grid new-grid
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'Map 'Tag 'Dynamic
+            :features $ #{} :js-ffi
+            :return $ :: 'Map 'Tag 'Dynamic
         'flip-grid $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn flip-grid (grid)
             let
@@ -458,7 +527,9 @@
                     fn (col-idx)
                       get-in grid $ [] col-idx row-idx
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List (:: 'List 'Dynamic)
+            :return $ :: 'List $ :: 'List 'Dynamic
         'mark-collapsing $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mark-collapsing (grid)
             map grid $ fn (row)
@@ -470,7 +541,9 @@
                     , cell
                 , row
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] $ :: 'List (:: 'List 'Dynamic)
+            :return $ :: 'List $ :: 'List 'Dynamic
         'move-shape $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn move-shape (store step)
             let
@@ -484,7 +557,9 @@
                 assoc store :drop-position next-pos
                 , store
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Number)
+            :return $ :: 'Map 'Tag 'Dynamic
         'quick-move $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn quick-move (store step)
             apply-args
@@ -502,12 +577,20 @@
                     recur $ complex/add at step
                     assoc store :drop-position pos
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) (:: 'List 'Number)
+            :return $ :: 'Map 'Tag 'Dynamic
         'updater $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (store op op-data op-id op-time)
             case-default op
               do (println "|unknown op" op op-data) store
-              :states $ update-states store (first op-data) (last op-data)
+              :states $ let
+                  state-data $ unsafe-coerce op-data $ :: 'List 'Dynamic
+                update-states store
+                  unsafe-coerce
+                    option:unwrap $ first state-data
+                    :: 'List 'Dynamic
+                  option:unwrap $ last state-data
               :hydrate-storage op-data
               :tick $ cond
                   or
@@ -521,9 +604,7 @@
                     assoc :drop-pick $ let
                         a $ rand-int $ count shapes-variations
                         b $ rand-int $ count
-                          option:unwrap-or
-                            nth shapes-variations a
-                            repeat nil 0
+                          option:unwrap-or (nth shapes-variations a) (repeat nil 0)
                       [] a b
                 (not (valid-put? (option:unwrap-or (get store :drop-pick) nil) (option:unwrap-or (get store :drop-position) nil) (option:unwrap-or (get store :grid) nil)))
                   assoc store :failed? true
@@ -538,18 +619,26 @@
               :right-most $ quick-move store $ [] 0 1
               :toggle-pause $ update store :paused? not
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {}
+            :args $ [] (:: 'Map 'Tag 'Dynamic) 'Tag 'Dynamic 'String 'Number
+            :features $ #{} :js-ffi
+            :return $ :: 'Map 'Tag 'Dynamic
         'valid-put? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn valid-put? (pick pos grid)
             let
-                real-cells $ ->
-                  get-in shapes-variations pick
-                  map $ fn (cell) (complex/add cell pos)
+                real-cells $ unsafe-coerce
+                  map
+                    option:unwrap-or (get-in shapes-variations pick) ([])
+                    fn (cell) (complex/add cell pos)
+                  :: 'List $ :: 'List 'Number
               every? real-cells $ fn (p)
                 and (contains-in? grid p)
                   option:none? $ get-in grid p
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Fn $ {} (:return 'Bool)
+            :args $ [] (:: 'List 'Number) (:: 'List 'Number)
+              :: 'List $ :: 'List 'Dynamic
+            :features $ #{} :js-ffi
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
           :require
