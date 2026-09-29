@@ -3,7 +3,7 @@
   :about "|Machine-generated snapshot. Do not edit directly — changes will be overwritten. Use `calcit query` to inspect and `calcit edit`/`calcit tree` to modify. Run `calcit docs agents --contract` before mutations; use `--full` for first orientation or changed contract digest. Manual edits must follow format and schema conventions, then run `calcit edit format`."
   :package |app
   :entries $ {} $ :default
-    {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!)
+    {} (:description |) (:init-fn 'app.main/main!) (:mode :native) (:reload-fn 'app.main/reload!) (:target :browser)
       :feature-policy $ {}
       :modules $ [] |respo.calcit/ |respo-ui.calcit/ |phlox/
       :type-slots $ {}
@@ -126,6 +126,15 @@
           :schema $ :: 'Fn $ {} (:return 'Number)
             :args $ []
             :features $ #{} :js-ffi
+        'detect-tick-interval $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn detect-tick-interval ()
+            unsafe-coerce
+              js/parseInt $ option:unwrap-or (get-env |interval) |300
+              , 'Number
+          :examples $ []
+          :schema $ :: 'Fn $ {} (:return 'Number)
+            :args $ []
+            :features $ #{} :js-ffi
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
             = |dev $ option:unwrap-or (get-env |mode) |release
@@ -141,10 +150,9 @@
           :examples $ []
           :schema $ :: 'Dynamic
         'tick-interval $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def tick-interval
-            js/parseInt $ option:unwrap-or (get-env |interval) |300
+          :code $ quote $ def tick-interval (detect-tick-interval)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.config
     'app.main $ %{} 'FileEntry
@@ -356,7 +364,7 @@
                   option:unwrap $ first drop-pick
                   , 'Number
                 shape-variants $ unsafe-coerce
-                  option:unwrap-or (nth shapes-variations shape-index) (repeat nil 0)
+                  option:unwrap-or (nth shapes-variations shape-index) ([])
                   :: 'List $ :: 'List 'Number
                 prev $ option:unwrap-or (last drop-pick) 0
                 next-pick $ [] shape-index $ if
@@ -418,12 +426,14 @@
         'contains-in? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn contains-in? (xs path)
             if (empty? path) true $ let
-                p0 $ first path
+                p0 $ option:unwrap $ first path
               cond
                   list? xs
                   if (number? p0)
                     if (contains? xs p0)
-                      recur (nth xs p0) (rest path)
+                      recur
+                        option:unwrap $ nth xs p0
+                        rest path
                       , false
                     , false
                 (map? xs)
@@ -509,7 +519,7 @@
                     assoc :drop-pick $ let
                         a $ rand-int $ count shapes-variations
                         b $ rand-int $ count
-                          option:unwrap-or (nth shapes-variations a) (repeat nil 0)
+                          option:unwrap-or (nth shapes-variations a) ([])
                       [] a b
                     assoc :grid new-grid
           :examples $ []
@@ -604,7 +614,7 @@
                     assoc :drop-pick $ let
                         a $ rand-int $ count shapes-variations
                         b $ rand-int $ count
-                          option:unwrap-or (nth shapes-variations a) (repeat nil 0)
+                          option:unwrap-or (nth shapes-variations a) ([])
                       [] a b
                 (not (valid-put? (option:unwrap-or (get store :drop-pick) nil) (option:unwrap-or (get store :drop-position) nil) (option:unwrap-or (get store :grid) nil)))
                   assoc store :failed? true
