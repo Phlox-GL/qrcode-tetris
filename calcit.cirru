@@ -139,7 +139,7 @@
           :code $ quote $ def dev?
             = |dev $ option:unwrap-or (get-env |mode) |release
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Bool
         'grid-size $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def grid-size (detect-grid-size)
           :examples $ []
@@ -148,7 +148,7 @@
           :code $ quote $ def site
             {} (:dev-ui |http://localhost:8100/main.css) (:release-ui |http://cdn.tiye.me/favored-fonts/main.css) (:cdn-url |http://cdn.tiye.me/phlox/) (:title |Phlox) (:icon |http://cdn.tiye.me/logo/quamolit.png) (:storage-key |phlox)
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Map 'Tag 'String
         'tick-interval $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def tick-interval (detect-tick-interval)
           :examples $ []
