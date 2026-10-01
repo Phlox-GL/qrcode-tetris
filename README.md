@@ -18,8 +18,8 @@ yarn install --immutable
 yarn dev
 ```
 
-Development compiles once, then runs Calcit `js -w` and Vite together; either
-process exiting stops the other. `yarn build` and `yarn release` compile and build
+`yarn dev` compiles initially and starts Vite. For live Calcit edits, run
+`calcit calcit.cirru js -w` in another terminal. `yarn build` and `yarn release` compile and build
 once. CI keeps canonical formatting, strict entry/all-public checks and actual
 build, without repeated migration/type-debt reports or new verification scripts.
 Runs are grouped per PR and separately for production, without cancellation.
