@@ -222,6 +222,7 @@
                 render-app!
                 hud! |ok~ |Ok
               hud! |error build-errors
+            , &unit
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
             :args $ []
@@ -233,11 +234,17 @@
                 hint-fn $ {}
                   :args $ [] 'Enum
                   :return 'Unit
-                (deref *dispatch-fn) (&enum:nth op 0)
-                  if
-                    = 2 $ &enum:count op
-                    &enum:nth op 1
-                    , nil
+                let
+                    op-tag $ decode-map-as (&enum:nth op 0) 'Tag
+                    op-data $ if
+                      and (= :states op-tag)
+                        = 3 $ &enum:count op
+                      [] (&enum:nth op 1) (&enum:nth op 2)
+                      if
+                        = 2 $ &enum:count op
+                        &enum:nth op 1
+                        , nil
+                  (deref *dispatch-fn) op-tag op-data
               {}
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Unit)
@@ -559,7 +566,9 @@
                           :args $ []
                             :: 'List $ :: 'List 'Dynamic
                             :: 'List 'Number
-                        assoc-in acc pos $ {} $ :kind :filled
+                        decode-map-as
+                          assoc-in acc pos $ {} $ :kind :filled
+                          :: 'List $ :: 'List 'Dynamic
                   -> store
                     assoc :drop-position $ [] 1 $ * 0.5
                       dec $ phlox.core/ffi-number grid-size
