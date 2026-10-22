@@ -22,6 +22,7 @@ Phlox 重绘文字问题另见 [Phlox #71](https://github.com/Phlox-GL/phlox/iss
 
 本轮配对正式依赖图，52 处内部 `option:unwrap-or` 改为公开 `.unwrap-or`
 （含一处旧注释），保留 nil/空列表/环境变量 fallback，不重复修改落块与消行算法。
+原附着测试中的另外两处内部 Option 调用也同步迁移，九个断言和预期值不变。
 `middle-idx` 明确为 Number，直接使用已检查的 Number grid-size，不再做无必要的宿主转换。
 `hud!` 页面报错和成功提示保留。沿用两条原附着回归，不加脚本、强转或测试框架。
 Actions 使用精确正式 tag，接受 tag 可移动风险；本轮正式 CI/原入口验收不以旧 alpha 结果代替。

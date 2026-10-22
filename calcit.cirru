@@ -327,9 +327,9 @@
             :code $ quote $ let
                 grid $ gen-qrcode-grid 31
               assert= 31 $ count grid
-              assert= true $ map? $ option:unwrap
+              assert= true $ map? $ .unwrap
                 get-in grid $ [] 0 0
-              assert= true $ nil? $ option:unwrap-or
+              assert= true $ nil? $ .unwrap-or
                 get-in grid $ [] 10 10
                 , nil
               assert= grid $ app.updater/flip-grid $ app.updater/flip-grid grid
