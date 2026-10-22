@@ -14,25 +14,25 @@
           :code $ quote $ defn comp-container (store)
             let
                 cursor $ []
-                states $ option:unwrap-or (get store :states) nil
+                states $ .unwrap-or (get store :states) nil
                 grid $ decode-map-as
-                  option:unwrap-or (get store :grid) nil
+                  .unwrap-or (get store :grid) nil
                   :: 'List $ :: 'List 'Dynamic
                 drop-position $ decode-map-as
                   either
-                    option:unwrap-or (get store :drop-position) nil
+                    .unwrap-or (get store :drop-position) nil
                     [] 0 0
                   :: 'List 'Number
                 drop-pick $ decode-map-as
                   either
-                    option:unwrap-or (get store :drop-pick) nil
+                    .unwrap-or (get store :drop-pick) nil
                     [] 0 0
                   :: 'List 'Number
                 dropping $ decode-map-as
-                  option:unwrap-or (get-in shapes-variations drop-pick) ([])
+                  .unwrap-or (get-in shapes-variations drop-pick) ([])
                   :: 'List $ :: 'List 'Number
                 dropping-cells $ if
-                  non-nil? $ option:unwrap-or (get store :drop-pick) nil
+                  non-nil? $ .unwrap-or (get store :drop-pick) nil
                   reduce
                     map dropping $ fn (x) (complex/add drop-position x)
                     #{}
@@ -44,7 +44,7 @@
                           :: 'List 'Number
                       include acc x
                   #{}
-              ; println $ option:unwrap-or (get store :failed?) nil
+              ; println $ .unwrap-or (get store :failed?) nil
               container
                 {} $ :position $ [] 0 0
                 rect $ {}
@@ -66,8 +66,8 @@
                               hslx 200 10 50
                             (non-nil? cell)
                               match
-                                option:unwrap-or (get cell :kind) nil
-                                :preset $ option:unwrap-or (get cell :color) nil
+                                .unwrap-or (get cell :kind) nil
+                                :preset $ .unwrap-or (get cell :color) nil
                                 :collapsing $ hslx 30 90 70
                                 _ $ hslx 10 80 10
                             true $ hslx 200 10 100
@@ -84,7 +84,7 @@
                   :fill $ hslx 0 0 60
                   :on-pointertap $ fn (e d!) (js/document.body.requestFullscreen)
                 if
-                  option:unwrap-or (get store :failed?) nil
+                  .unwrap-or (get store :failed?) nil
                   text $ {}
                     :position $ [] 340 0
                     :text |Failed
@@ -103,9 +103,9 @@
             :return $ :: 'List 'T
         'middle-idx $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def middle-idx
-            * 0.5 $ dec $ phlox.core/ffi-number grid-size
+            * 0.5 $ dec grid-size
           :examples $ []
-          :schema $ :: 'Dynamic
+          :schema $ :: 'Number
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.comp.container
           :require
@@ -122,7 +122,7 @@
         'detect-grid-size $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn detect-grid-size ()
             decode-map-as
-              js/parseInt $ option:unwrap-or (get-env |size) |31
+              js/parseInt $ .unwrap-or (get-env |size) |31
               , 'Number
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Number)
@@ -131,7 +131,7 @@
         'detect-tick-interval $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn detect-tick-interval ()
             decode-map-as
-              js/parseInt $ option:unwrap-or (get-env |interval) |300
+              js/parseInt $ .unwrap-or (get-env |interval) |300
               , 'Number
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Number)
@@ -139,7 +139,7 @@
             :features $ #{} :js-ffi
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
-            = |dev $ option:unwrap-or (get-env |mode) |release
+            = |dev $ .unwrap-or (get-env |mode) |release
           :examples $ []
           :schema $ :: 'Bool
         'grid-size $ %{} 'CodeEntry (:doc |)
@@ -194,8 +194,8 @@
             js/setInterval
               fn () $ if
                 and
-                  not $ option:unwrap-or (get @*store :paused?) nil
-                  not $ option:unwrap-or (get @*store :failed?) nil
+                  not $ .unwrap-or (get @*store :paused?) nil
+                  not $ .unwrap-or (get @*store :failed?) nil
                 @*dispatch-fn :tick nil
               , config/tick-interval
             js/window.addEventListener |keydown $ fn (event)
@@ -396,21 +396,21 @@
           :code $ quote $ defn change-shape (store)
             let
                 drop-pick $ decode-map-as
-                  option:unwrap-or (get store :drop-pick) nil
+                  .unwrap-or (get store :drop-pick) nil
                   :: 'List 'Number
                 grid $ decode-map-as
-                  option:unwrap-or (get store :grid) nil
+                  .unwrap-or (get store :grid) nil
                   :: 'List $ :: 'List 'Dynamic
                 pos $ decode-map-as
-                  option:unwrap-or (get store :drop-position) nil
+                  .unwrap-or (get store :drop-position) nil
                   :: 'List 'Number
                 shape-index $ decode-map-as
                   option:unwrap $ first drop-pick
                   , 'Number
                 shape-variants $ decode-map-as
-                  option:unwrap-or (nth shapes-variations shape-index) ([])
+                  .unwrap-or (nth shapes-variations shape-index) ([])
                   :: 'List $ :: 'List $ :: 'List 'Number
-                prev $ option:unwrap-or (last drop-pick) 0
+                prev $ .unwrap-or (last drop-pick) 0
                 next-pick $ [] shape-index $ if
                   < (inc prev) (count shape-variants)
                   inc prev
@@ -430,13 +430,13 @@
                   , acc
                 , acc
               let
-                  cursor $ option:unwrap-or (last col) nil
+                  cursor $ .unwrap-or (last col) nil
                 cond
                     nil? cursor
                     recur (prepend acc nil) (butlast col) collapsed
-                  (= :collapsing (option:unwrap-or (get cursor :kind) nil))
+                  (= :collapsing (.unwrap-or (get cursor :kind) nil))
                     recur acc (butlast col) (inc collapsed)
-                  (= :preset (option:unwrap-or (get cursor :kind) nil))
+                  (= :preset (.unwrap-or (get cursor :kind) nil))
                     if (> collapsed 0)
                       recur
                         concat
@@ -458,7 +458,7 @@
               any? grid $ fn (row)
                 any? row $ fn (cell)
                   and (map? cell)
-                    = :collapsing $ option:unwrap-or (get cell :kind) nil
+                    = :collapsing $ .unwrap-or (get cell :kind) nil
               -> grid (flip-grid)
                 map $ fn (col)
                   collapse-column ([]) col 0
@@ -503,7 +503,7 @@
                   if (= 0 collapsed-size) acc $ concat
                     repeat (repeat nil grid-size) collapsed-size
                     , acc
-                (any? (option:unwrap (last xs)) (fn (x) (and (map? x) (= (option:unwrap-or (get x :kind) nil) :preset))))
+                (any? (option:unwrap (last xs)) (fn (x) (and (map? x) (= (.unwrap-or (get x :kind) nil) :preset))))
                   let
                       next-acc $ if (= 0 collapsed-size) acc $ concat
                         repeat (repeat nil grid-size) collapsed-size
@@ -512,7 +512,7 @@
                       prepend next-acc $ option:unwrap $ last xs
                       butlast xs
                       , 0
-                (every? (option:unwrap (last xs)) (fn (x) (and (map? x) (= (option:unwrap-or (get x :kind) nil) :filled))))
+                (every? (option:unwrap (last xs)) (fn (x) (and (map? x) (= (.unwrap-or (get x :kind) nil) :filled))))
                   recur acc (butlast xs) (inc collapsed-size)
                 true $ recur
                   prepend acc $ option:unwrap $ last xs
@@ -527,36 +527,36 @@
             let
                 next-pos $ complex/add
                   decode-map-as
-                    option:unwrap-or (get store :drop-position) nil
+                    .unwrap-or (get store :drop-position) nil
                     :: 'List 'Number
                   [] 1 0
               if
                 valid-put?
                   decode-map-as
-                    option:unwrap-or (get store :drop-pick) nil
+                    .unwrap-or (get store :drop-pick) nil
                     :: 'List 'Number
                   , next-pos $ decode-map-as
-                    option:unwrap-or (get store :grid) nil
+                    .unwrap-or (get store :grid) nil
                     :: 'List $ :: 'List 'Dynamic
                 let
                     next-store $ assoc store :drop-position next-pos
                     grid $ decode-map-as
-                      option:unwrap-or (get next-store :grid) nil
+                      .unwrap-or (get next-store :grid) nil
                       :: 'List $ :: 'List 'Dynamic
                   assoc next-store :grid $ collapse-grid grid
                 let
                     pick $ decode-map-as
-                      option:unwrap-or (get store :drop-pick) nil
+                      .unwrap-or (get store :drop-pick) nil
                       :: 'List 'Number
                     pos $ decode-map-as
-                      option:unwrap-or (get store :drop-position) nil
+                      .unwrap-or (get store :drop-position) nil
                       :: 'List 'Number
                     grid $ decode-map-as
-                      option:unwrap-or (get store :grid) nil
+                      .unwrap-or (get store :grid) nil
                       :: 'List $ :: 'List 'Dynamic
                     real-cells $ map
                       decode-map-as
-                        option:unwrap-or (get-in shapes-variations pick) ([])
+                        .unwrap-or (get-in shapes-variations pick) ([])
                         :: 'List $ :: 'List 'Number
                       fn (cell) (complex/add cell pos)
                     new-grid $ mark-collapsing $ foldl real-cells grid
@@ -577,7 +577,7 @@
                           rand-int $ count shapes-variations
                           , 'Number
                         b $ decode-map-as
-                          rand-int $ count $ option:unwrap-or (nth shapes-variations a) ([])
+                          rand-int $ count $ .unwrap-or (nth shapes-variations a) ([])
                           , 'Number
                       [] a b
                     assoc :grid new-grid
@@ -594,7 +594,7 @@
                 fn (row-idx)
                   map (range size)
                     fn (col-idx)
-                      option:unwrap-or
+                      .unwrap-or
                         get-in grid $ [] col-idx row-idx
                         , nil
           :examples $ []
@@ -607,7 +607,7 @@
               if (every? row non-nil?)
                 map row $ fn (cell)
                   if
-                    = :filled $ option:unwrap-or (get cell :kind) nil
+                    = :filled $ .unwrap-or (get cell :kind) nil
                     {} $ :kind :collapsing
                     , cell
                 , row
@@ -620,16 +620,16 @@
             let
                 next-pos $ complex/add
                   decode-map-as
-                    option:unwrap-or (get store :drop-position) nil
+                    .unwrap-or (get store :drop-position) nil
                     :: 'List 'Number
                   , step
               if
                 valid-put?
                   decode-map-as
-                    option:unwrap-or (get store :drop-pick) nil
+                    .unwrap-or (get store :drop-pick) nil
                     :: 'List 'Number
                   , next-pos $ decode-map-as
-                    option:unwrap-or (get store :grid) nil
+                    .unwrap-or (get store :grid) nil
                     :: 'List $ :: 'List 'Dynamic
                 assoc store :drop-position next-pos
                 , store
@@ -644,17 +644,17 @@
               let
                   pos $ complex/add
                     decode-map-as
-                      option:unwrap-or (get store :drop-position) nil
+                      .unwrap-or (get store :drop-position) nil
                       :: 'List 'Number
                     , at
                   next-pos $ complex/add pos step
                 if
                   valid-put?
                     decode-map-as
-                      option:unwrap-or (get store :drop-pick) nil
+                      .unwrap-or (get store :drop-pick) nil
                       :: 'List 'Number
                     , next-pos $ decode-map-as
-                      option:unwrap-or (get store :grid) nil
+                      .unwrap-or (get store :grid) nil
                       :: 'List $ :: 'List 'Dynamic
                   recur $ complex/add at step
                   assoc store :drop-position pos
@@ -675,10 +675,10 @@
               :hydrate-storage $ decode-map-as op-data $ :: 'Map 'Tag 'Dynamic
               :tick $ cond
                   or
-                    option:unwrap-or (get store :failed?) nil
-                    option:unwrap-or (get store :paused?) nil
+                    .unwrap-or (get store :failed?) nil
+                    .unwrap-or (get store :paused?) nil
                   , store
-                (nil? (option:unwrap-or (get store :drop-pick) nil))
+                (nil? (.unwrap-or (get store :drop-pick) nil))
                   -> store
                     assoc :drop-position $ [] 1 $ * 0.5
                       dec $ phlox.core/ffi-number grid-size
@@ -687,10 +687,10 @@
                           rand-int $ count shapes-variations
                           , 'Number
                         b $ decode-map-as
-                          rand-int $ count $ option:unwrap-or (nth shapes-variations a) ([])
+                          rand-int $ count $ .unwrap-or (nth shapes-variations a) ([])
                           , 'Number
                       [] a b
-                (not (valid-put? (decode-map-as (option:unwrap-or (get store :drop-pick) nil) (:: 'List 'Number)) (decode-map-as (option:unwrap-or (get store :drop-position) nil) (:: 'List 'Number)) (decode-map-as (option:unwrap-or (get store :grid) nil) (:: 'List (:: 'List 'Dynamic)))))
+                (not (valid-put? (decode-map-as (.unwrap-or (get store :drop-pick) nil) (:: 'List 'Number)) (decode-map-as (.unwrap-or (get store :drop-position) nil) (:: 'List 'Number)) (decode-map-as (.unwrap-or (get store :grid) nil) (:: 'List (:: 'List 'Dynamic)))))
                   assoc store :failed? true
                 true $ drop-shape store
               :up $ change-shape store
@@ -713,12 +713,12 @@
             let
                 real-cells $ map
                   decode-map-as
-                    option:unwrap-or (get-in shapes-variations pick) ([])
+                    .unwrap-or (get-in shapes-variations pick) ([])
                     :: 'List $ :: 'List 'Number
                   fn (cell) (complex/add cell pos)
               every? real-cells $ fn (p)
                 and (contains-in? grid p)
-                  nil? $ option:unwrap-or (get-in grid p) nil
+                  nil? $ .unwrap-or (get-in grid p) nil
           :examples $ []
           :schema $ :: 'Fn $ {} (:return 'Bool)
             :args $ [] (:: 'List 'Number) (:: 'List 'Number)
