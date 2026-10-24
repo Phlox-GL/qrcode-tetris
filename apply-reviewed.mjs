@@ -16,7 +16,18 @@ function walk(x,path,id,region){
     const old=x[0];counts[region+':'+old]=(counts[region+':'+old]||0)+1;
     if(region==='code'){
       const r=spawnSync('calcit',['query','type-at',id,'--path','@'+[...path,1].join('.'),'--format','json'],{encoding:'utf8',maxBuffer:24e6});assert.equal(r.status,0);const evidence=JSON.parse(r.stdout);types.push({id,path,tree:structuredClone(x),evidence,stderr:r.stderr});
-      if(old==='count')assert.ok(evidence.data.inferred_type?.includes('List'));
+      writeFileSync('acceptance/receiver-types.json',JSON.stringify(types,null,2));
+      if(old==='count'&&!evidence.data.inferred_type?.includes('List')){
+        assert.equal(evidence.data.inferred_type,null);assert.ok(evidence.diagnostics.some(d=>d.code==='W_TYPE_AT_UNRESOLVED'));
+        const receiver=x[1],shape=before.find(d=>d.id==='app.schema/shapes-variations');assert.equal(shape.schema[0],'::');assert.equal(shape.schema[1],"'List");
+        if(receiver==='shape-variants'){
+          assert.equal(id,'app.updater/change-shape');const binding=before.find(d=>d.id===id).code[3][1].find(b=>b[0]==='shape-variants');assert.equal(binding[1][0],'decode-map-as');assert.equal(binding[1][2][0],'::');assert.equal(binding[1][2][1],"'List");
+        }else if(receiver==='shapes-variations'){
+          assert.ok(['app.updater/drop-shape','app.updater/updater'].includes(id));
+        }else if(Array.isArray(receiver)){
+          assert.deepEqual(receiver,['.unwrap-or',['nth','shapes-variations','a'],['[]']]);assert.equal(shape.schema[2][1],"'List");
+        }else{assert.equal(receiver,'grid');assert.equal(id,'app.updater/flip-grid');const args=before.find(d=>d.id===id).schema.find(s=>Array.isArray(s)&&s[0]===':args')[1];assert.equal(args[1][1],"'List");}
+      }
       const p='@'+[...path,0].join('.');assert.equal(JSON.parse(run('tree','show',id,'--path',p,'--format','json')).tree,old);ops.push(['tree','replace',id,'--path',p,'--input-format','json-ast','--code',JSON.stringify(alias),'--expect','quote '+old]);
     }else{assert.equal(id,'app.schema/gen-qrcode-grid');assert.equal(old,'count');assert.equal(x[1],'grid');}
     x[0]=alias;
