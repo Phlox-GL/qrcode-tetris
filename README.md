@@ -4,6 +4,36 @@ Phlox workflow in [calcit-js](https://github.com/Quamolit/phlox.calcit)
 
 ### Usage
 
+使用配对的正式 Calcit 和 `@calcit/procs` 0.38.0、Node 24、Yarn 4.18.0。
+正式依赖包括 Phlox 0.9.3、Respo 0.19.5 和 UI 0.15.2。
+默认棋盘仍是 31 格，二维码图案、移动、旋转、硬降、消行和重置沿用原规则。
+首个落块出现后才能移动或旋转。页面热更新继续使用 HUD。
+
+棋盘格用 union 区分二维码预设格和玩家方块，Option 表示空格。
+落块的选型与位置保存在同一个具名结构里。键盘和按钮发送具名操作，
+Phlox 的旧游标事件在接缝处适配。页面没有存档导入或恢复入口。
+
+PR preview assets use `pr/<number>/<run-id>/<attempt>/`. Vite and released COS Action v1.3.0
+share the base URL; HTML reference and public upload verification are built into the action, without
+an extra checker. Production prefixes and server deployment paths are unchanged.
+
+```bash
+caps --strict --ci
+yarn install --immutable
+yarn dev
+```
+
+`yarn dev` compiles initially and starts Vite. For live Calcit edits, run
+`calcit calcit.cirru -w` in another terminal. `yarn build` and `yarn release` compile and build
+once. CI keeps canonical formatting, strict entry/all-public checks and actual
+build, without repeated migration/type-debt reports or new verification scripts.
+Runs are grouped per PR and separately for production, without cancellation.
+CI 执行全部定义、公共命名空间、附带回归、完整 strict 和构建。
+附带回归覆盖空格与越界、二维码预设、转置往返、无消行时保持棋盘，以及消除玩家方块时保留预设格。
+
+<details>
+<summary>0.30.1 历史迁移记录</summary>
+
 使用配对的正式 Calcit/procs **0.30.1**、Node 24、Yarn 4.18.0。
 模块使用正式 Phlox 0.7.18、Respo 0.16.126、UI 0.8.1；
 仅维护 `calcit.cirru` 和 `deps.cirru`，不提交 `js-out` 或恢复旧 Snapshot 文件。
@@ -35,24 +65,7 @@ Actions 使用精确正式 tag，接受 tag 可移动风险；本轮正式 CI/�
 同步已发布的正式依赖图，不改变 31 格尺寸、按键、nil/越界、重置和刷新合同，
 不新增验证脚本、包装器、类型预算或编译器改写规则。
 
-PR preview assets use `pr/<number>/<run-id>/<attempt>/`. Vite and released COS Action v1.2.0
-share the base URL; HTML reference and public upload verification are built into the action, without
-an extra checker. Production prefixes and server deployment paths are unchanged.
-
-```bash
-caps --strict --ci
-yarn install --immutable
-yarn dev
-```
-
-`yarn dev` compiles initially and starts Vite. For live Calcit edits, run
-`calcit calcit.cirru -w` in another terminal. `yarn build` and `yarn release` compile and build
-once. CI keeps canonical formatting, strict entry/all-public checks and actual
-build, without repeated migration/type-debt reports or new verification scripts.
-Runs are grouped per PR and separately for production, without cancellation.
-CI 执行全部定义、公共命名空间、两条针对上述行为的附带回归、完整 strict 和构建。
-原项目附带测试为 0；新增的两条包含 9 个实际业务断言，覆盖空格/占用/越界、
-原始格子、转置往返和无消行时保持网格，不引入独立验证脚本。
+</details>
 
 ### Resources
 
