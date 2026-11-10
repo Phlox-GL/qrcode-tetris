@@ -160,22 +160,6 @@
             , &unit
           :examples $ []
           :schema $ quote $ Fn app.schema/AppOp (-> Unit) (:features :js-ffi)
-        'dispatch-view! $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defn dispatch-view! (raw)
-            if
-              = (enum-definition raw) (Option :some app.schema/GameOp)
-              @*dispatch-fn $ decode-map-as raw 'app.schema/GameOp
-              match raw
-                (:states path value)
-                  @*dispatch-fn $ schema/StateOp :states
-                    decode-map-as path $ List Dynamic
-                    , value
-                _ $ do
-                  when dev? $ println "|Unknown Phlox operation" raw
-                  , &unit
-            , &unit
-          :examples $ []
-          :schema $ quote $ Fn AnyEnum (-> Unit) (:features :js-ffi) (:open :reflect)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
             if dev? $ load-console-formatter!
@@ -224,7 +208,7 @@
           :schema $ quote $ Fn (-> Unit)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
-            render! (comp-container @*store) dispatch-view! $ {}
+            render! (comp-container @*store) @*dispatch-fn $ {}
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
       :ns $ %{} 'NsEntry (:doc |)
@@ -283,7 +267,7 @@
           :schema $ quote StructDef
         'StateOp $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum StateOp
-            :states (List Dynamic) Dynamic
+            :states (List respo.schema/CoordKey) Dynamic
           :examples $ []
           :schema $ quote EnumDef
         'collapsing-cell $ %{} 'CodeEntry (:doc |)
