@@ -149,7 +149,7 @@
           :code $ quote $ defref *dispatch-fn dispatch!
           :examples $ []
           :schema $ quote $ Ref
-            Fn app.schema/AppOp (-> Unit) (:features :js-ffi)
+            Fn app.schema/GameOp (-> Unit) (:features :js-ffi)
         '*store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *store schema/store
           :examples $ []
@@ -159,7 +159,7 @@
             reset! *store $ updater @*store op
             , &unit
           :examples $ []
-          :schema $ quote $ Fn app.schema/AppOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn app.schema/GameOp (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
             if dev? $ load-console-formatter!
@@ -225,10 +225,6 @@
             |bottom-tip :default hud!
     'app.schema $ %{} 'FileEntry
       :defs $ {}
-        'AppOp $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defunion AppOp GameOp StateOp
-          :examples $ []
-          :schema $ quote UnionDef
         'BlockCell $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defenum BlockCell (:filled) (:collapsing)
           :examples $ []
@@ -253,7 +249,6 @@
           :schema $ quote EnumDef
         'GameState $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct GameState
-            :states $ Map Dynamic Dynamic
             :grid $ List $ List (Option app.schema/Cell)
             :failed? Bool
             :paused? Bool
@@ -265,11 +260,6 @@
           :code $ quote $ defstruct PresetCell (:color Number)
           :examples $ []
           :schema $ quote StructDef
-        'StateOp $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum StateOp
-            :states (List respo.schema/CoordKey) Dynamic
-          :examples $ []
-          :schema $ quote EnumDef
         'collapsing-cell $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def collapsing-cell
             Option :some $ BlockCell :collapsing
@@ -393,9 +383,7 @@
             List $ List $ List Number
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
-            GameState :states
-              {} $ :cursor $ []
-              , :grid (gen-qrcode-grid grid-size) :failed? false :paused? false :score 0 :piece $ Option :none
+            GameState :grid (gen-qrcode-grid grid-size) :failed? false :paused? false :score 0 :piece $ Option :none
           :examples $ []
           :schema $ quote app.schema/GameState
       :ns $ %{} 'NsEntry (:doc |)
@@ -609,46 +597,34 @@
         'updater $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (store op)
             match op
-              (app.schema/StateOp state-op)
-                match state-op $
-                  :states path value
-                  &struct:assoc store :states $ decode-map-as
-                    .unwrap $ get
-                      update-states
-                        {} $ :states $ :states store
-                        , path value
-                      , :states
-                    Map Dynamic Dynamic
-              (app.schema/GameOp game-op)
-                match game-op
-                  (:tick)
-                    if
-                      or (:failed? store) (:paused? store)
-                      , store $ match (:piece store)
-                        (:none)
-                          with-piece store $ new-piece
-                        (:some piece)
-                          if
-                            valid-put? (:pick piece) (:position piece) (:grid store)
-                            drop-shape store piece
-                            &struct:assoc store :failed? true
-                  (:rotate)
-                    match (:piece store)
-                      (:none) store
-                      (:some piece) (change-shape store piece)
-                  (:move step)
-                    match (:piece store)
-                      (:none) store
-                      (:some piece) (move-shape store piece step)
-                  (:move-most step)
-                    match (:piece store)
-                      (:none) store
-                      (:some piece) (quick-move store piece step)
-                  (:reset) schema/store
-                  (:toggle-pause)
-                    &struct:assoc store :paused? $ not $ :paused? store
+              (:tick)
+                if
+                  or (:failed? store) (:paused? store)
+                  , store $ match (:piece store)
+                    (:none)
+                      with-piece store $ new-piece
+                    (:some piece)
+                      if
+                        valid-put? (:pick piece) (:position piece) (:grid store)
+                        drop-shape store piece
+                        &struct:assoc store :failed? true
+              (:rotate)
+                match (:piece store)
+                  (:none) store
+                  (:some piece) (change-shape store piece)
+              (:move step)
+                match (:piece store)
+                  (:none) store
+                  (:some piece) (move-shape store piece step)
+              (:move-most step)
+                match (:piece store)
+                  (:none) store
+                  (:some piece) (quick-move store piece step)
+              (:reset) schema/store
+              (:toggle-pause)
+                &struct:assoc store :paused? $ not $ :paused? store
           :examples $ []
-          :schema $ quote $ Fn app.schema/GameState app.schema/AppOp (-> app.schema/GameState) (:features :js-ffi)
+          :schema $ quote $ Fn app.schema/GameState app.schema/GameOp (-> app.schema/GameState) (:features :js-ffi)
         'valid-put? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn valid-put? (pick pos grid)
             let
@@ -680,7 +656,6 @@
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
           :require
-            phlox.cursor :refer $ update-states
             app.schema :refer $ shapes-variations
             app.schema :as schema
             app.config :refer $ grid-size
