@@ -11,7 +11,7 @@ Phlox workflow in [calcit-js](https://github.com/Quamolit/phlox.calcit)
 
 棋盘格用 union 区分二维码预设格和玩家方块，Option 表示空格。
 落块的选型与位置保存在同一个具名结构里。键盘和按钮发送具名操作，
-Phlox 渲染直接接入具名 AppOp。页面没有存档导入或恢复入口。
+Phlox 渲染直接接入具名 GameOp。页面没有存档导入或恢复入口。
 
 PR preview assets use `pr/<number>/<run-id>/<attempt>/`. Vite and released COS Action v1.3.0
 share the base URL; HTML reference and public upload verification are built into the action, without
