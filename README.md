@@ -4,14 +4,14 @@ Phlox workflow in [calcit-js](https://github.com/Quamolit/phlox.calcit)
 
 ### Usage
 
-使用配对的正式 Calcit 和 `@calcit/procs` 0.40.0、Node 24、Yarn 4.18.0。
+使用配对的正式 Calcit 和 `@calcit/procs` 0.41.0、Node 24、Yarn 4.18.0。
 正式依赖包括 Phlox 0.9.3、Respo 0.19.5 和 UI 0.15.2。
 默认棋盘仍是 31 格，二维码图案、移动、旋转、硬降、消行和重置沿用原规则。
 首个落块出现后才能移动或旋转。页面热更新继续使用 HUD。
 
 棋盘格用 union 区分二维码预设格和玩家方块，Option 表示空格。
 落块的选型与位置保存在同一个具名结构里。键盘和按钮发送具名操作，
-Phlox 渲染直接接入具名 GameOp。页面没有存档导入或恢复入口。
+Phlox 渲染直接接入具名 GameOp，移动动作使用 MoveDirection 的左、右、下三个方向。页面没有存档导入或恢复入口。
 
 PR preview assets use `pr/<number>/<run-id>/<attempt>/`. Vite and released COS Action v1.3.0
 share the base URL; HTML reference and public upload verification are built into the action, without

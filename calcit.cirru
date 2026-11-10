@@ -149,17 +149,17 @@
           :code $ quote $ defref *dispatch-fn dispatch!
           :examples $ []
           :schema $ quote $ Ref
-            Fn app.schema/GameOp (-> Unit) (:features :js-ffi)
+            Fn schema/GameOp (-> Unit) (:features :js-ffi)
         '*store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *store schema/store
           :examples $ []
-          :schema $ quote $ Ref app.schema/GameState
+          :schema $ quote $ Ref schema/GameState
         'dispatch! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn dispatch! (op)
             reset! *store $ updater @*store op
             , &unit
           :examples $ []
-          :schema $ quote $ Fn app.schema/GameOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/GameOp (-> Unit) (:features :js-ffi)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
             if dev? $ load-console-formatter!
@@ -179,15 +179,15 @@
               match (.-key event)
                 |ArrowUp $ @*dispatch-fn $ schema/GameOp :rotate
                 |ArrowDown $ if (.-shiftKey event)
-                  @*dispatch-fn $ schema/GameOp :move-most $ [] 1 0
-                  @*dispatch-fn $ schema/GameOp :move $ [] 1 0
+                  @*dispatch-fn $ schema/GameOp :move-most $ schema/MoveDirection :down
+                  @*dispatch-fn $ schema/GameOp :move $ schema/MoveDirection :down
                 |ArrowLeft $ if (.-shiftKey event)
-                  @*dispatch-fn $ schema/GameOp :move-most $ [] 0 -1
-                  @*dispatch-fn $ schema/GameOp :move $ [] 0 -1
+                  @*dispatch-fn $ schema/GameOp :move-most $ schema/MoveDirection :left
+                  @*dispatch-fn $ schema/GameOp :move $ schema/MoveDirection :left
                 |ArrowRight $ if (.-shiftKey event)
-                  @*dispatch-fn $ schema/GameOp :move-most $ [] 0 1
-                  @*dispatch-fn $ schema/GameOp :move $ [] 0 1
-                "| " $ @*dispatch-fn $ schema/GameOp :move-most ([] 1 0)
+                  @*dispatch-fn $ schema/GameOp :move-most $ schema/MoveDirection :right
+                  @*dispatch-fn $ schema/GameOp :move $ schema/MoveDirection :right
+                "| " $ @*dispatch-fn $ schema/GameOp :move-most (schema/MoveDirection :down)
                 |Enter $ @*dispatch-fn $ schema/GameOp :toggle-pause
                 _ $ do
                   println |Event: $ .-key event
@@ -240,11 +240,7 @@
           :examples $ []
           :schema $ quote StructDef
         'GameOp $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ defenum GameOp (:tick) (:rotate)
-            :move $ List Number
-            :move-most $ List Number
-            :reset
-            :toggle-pause
+          :code $ quote $ defenum GameOp (:tick) (:rotate) (:move MoveDirection) (:move-most MoveDirection) (:reset) (:toggle-pause)
           :examples $ []
           :schema $ quote EnumDef
         'GameState $ %{} 'CodeEntry (:doc |)
@@ -256,36 +252,40 @@
             :piece $ Option app.schema/FallingPiece
           :examples $ []
           :schema $ quote StructDef
+        'MoveDirection $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defenum MoveDirection (:down) (:left) (:right)
+          :examples $ []
+          :schema $ quote EnumDef
         'PresetCell $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defstruct PresetCell (:color Number)
           :examples $ []
           :schema $ quote StructDef
         'collapsing-cell $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def collapsing-cell
-            Option :some $ BlockCell :collapsing
+            Some $ BlockCell :collapsing
           :examples $ []
-          :schema $ quote $ Option app.schema/Cell
+          :schema $ quote $ Option Cell
         'detection-pattern-5 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def detection-pattern-5
             [] ([] p1 p1 p1 p1 p1) ([] p1 p0 p0 p0 p1) ([] p1 p0 p1 p0 p1) ([] p1 p0 p0 p0 p1) ([] p1 p1 p1 p1 p1)
           :examples $ []
           :schema $ quote $ List
-            List $ Option app.schema/Cell
+            List $ Option Cell
         'detection-pattern-7 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def detection-pattern-7
             [] ([] p1 p1 p1 p1 p1 p1 p1) ([] p1 p0 p0 p0 p0 p0 p1) ([] p1 p0 p1 p1 p1 p0 p1) ([] p1 p0 p1 p1 p1 p0 p1) ([] p1 p0 p1 p1 p1 p0 p1) ([] p1 p0 p0 p0 p0 p0 p1) ([] p1 p1 p1 p1 p1 p1 p1)
           :examples $ []
           :schema $ quote $ List
-            List $ Option app.schema/Cell
+            List $ Option Cell
         'empty-cell $ %{} 'CodeEntry (:doc |)
-          :code $ quote $ def empty-cell (Option :none)
+          :code $ quote $ def empty-cell None
           :examples $ []
-          :schema $ quote $ Option app.schema/Cell
+          :schema $ quote $ Option Cell
         'filled-cell $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def filled-cell
-            Option :some $ BlockCell :filled
+            Some $ BlockCell :filled
           :examples $ []
-          :schema $ quote $ Option app.schema/Cell
+          :schema $ quote $ Option Cell
         'gen-qrcode-grid $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn gen-qrcode-grid (size)
             map (range size)
@@ -329,7 +329,7 @@
                         true empty-cell
           :examples $ []
           :schema $ quote $ Fn Number
-            -> $ List $ List (Option app.schema/Cell)
+            -> $ List $ List (Option Cell)
           :tests $ [] $ %{} 'TestEntry (:name |raw-cells-and-transpose-roundtrip)
             :code $ quote $ let
                 grid $ gen-qrcode-grid 31
@@ -342,14 +342,14 @@
               assert= grid $ app.updater/collapse-grid grid
         'p0 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def p0
-            Option :some $ PresetCell :color 0xffffff
+            Some $ PresetCell :color 0xffffff
           :examples $ []
-          :schema $ quote $ Option app.schema/Cell
+          :schema $ quote $ Option Cell
         'p1 $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def p1
-            Option :some $ PresetCell :color 0x000000
+            Some $ PresetCell :color 0x000000
           :examples $ []
-          :schema $ quote $ Option app.schema/Cell
+          :schema $ quote $ Option Cell
         'shapes-variations $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def shapes-variations
             []
@@ -383,9 +383,9 @@
             List $ List $ List Number
         'store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def store
-            GameState :grid (gen-qrcode-grid grid-size) :failed? false :paused? false :score 0 :piece $ Option :none
+            GameState :grid (gen-qrcode-grid grid-size) :failed? false :paused? false :score 0 :piece None
           :examples $ []
-          :schema $ quote app.schema/GameState
+          :schema $ quote GameState
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.schema
           :require $ app.config :refer $ grid-size
@@ -400,17 +400,17 @@
                   (app.schema/PresetCell _) false
                   (app.schema/BlockCell state) (= state expected)
           :examples $ []
-          :schema $ quote $ Fn (Option app.schema/Cell) app.schema/BlockCell (-> Bool)
+          :schema $ quote $ Fn (Option schema/Cell) schema/BlockCell (-> Bool)
         'cell-at $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn cell-at (grid y x)
             match (nth grid y)
               (:some row) (nth row x)
-              (:none) (Option :none)
+              (:none) None
           :examples $ []
           :schema $ quote $ Fn
-            List $ List $ Option app.schema/Cell
+            List $ List $ Option schema/Cell
             , Number Number
-              -> $ Option $ Option app.schema/Cell
+              -> $ Option $ Option schema/Cell
         'change-shape $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn change-shape (store piece)
             let
@@ -428,7 +428,7 @@
                 with-piece store $ &struct:assoc piece :pick next-pick
                 , store
           :examples $ []
-          :schema $ quote $ Fn app.schema/GameState app.schema/FallingPiece (-> app.schema/GameState)
+          :schema $ quote $ Fn schema/GameState schema/FallingPiece (-> schema/GameState)
         'collapse-column $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn collapse-column (acc col collapsed)
             if (empty? col)
@@ -453,10 +453,10 @@
                             recur (prepend acc current) remaining collapsed
           :examples $ []
           :schema $ quote $ Fn
-            List $ Option app.schema/Cell
-            List $ Option app.schema/Cell
+            List $ Option schema/Cell
+            List $ Option schema/Cell
             , Number
-              -> $ List $ Option app.schema/Cell
+              -> $ List $ Option schema/Cell
           :tests $ [] $ %{} 'TestEntry (:name |keeps-preset-barriers-while-clearing)
             :code $ quote $ assert= ([] schema/empty-cell schema/filled-cell schema/p1 schema/empty-cell schema/filled-cell)
               collapse-column ([])
@@ -476,8 +476,17 @@
               , grid
           :examples $ []
           :schema $ quote $ Fn
-            List $ List $ Option app.schema/Cell
-            -> $ List $ List (Option app.schema/Cell)
+            List $ List $ Option schema/Cell
+            -> $ List $ List (Option schema/Cell)
+        'direction-step $ %{} 'CodeEntry (:doc |)
+          :code $ quote $ defn direction-step (direction)
+            match direction
+              (:down) ([] 1 0)
+              (:left) ([] 0 -1)
+              (:right) ([] 0 1)
+          :examples $ []
+          :schema $ quote $ Fn schema/MoveDirection
+            -> $ List Number
         'drop-shape $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn drop-shape (store piece)
             let
@@ -506,7 +515,7 @@
                     with-piece store $ new-piece
                     , :grid new-grid
           :examples $ []
-          :schema $ quote $ Fn app.schema/GameState app.schema/FallingPiece (-> app.schema/GameState) (:features :js-ffi)
+          :schema $ quote $ Fn schema/GameState schema/FallingPiece (-> schema/GameState) (:features :js-ffi)
         'empty-at? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn empty-at? (grid pos)
             match
@@ -517,7 +526,7 @@
               (:none) false
           :examples $ []
           :schema $ quote $ Fn
-            List $ List $ Option app.schema/Cell
+            List $ List $ Option schema/Cell
             List Number
             -> Bool
         'flip-grid $ %{} 'CodeEntry (:doc |)
@@ -531,8 +540,8 @@
                       .unwrap-or (cell-at grid col-idx row-idx) schema/empty-cell
           :examples $ []
           :schema $ quote $ Fn
-            List $ List $ Option app.schema/Cell
-            -> $ List $ List (Option app.schema/Cell)
+            List $ List $ Option schema/Cell
+            -> $ List $ List (Option schema/Cell)
         'mark-collapsing $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn mark-collapsing (grid)
             map grid $ fn (row)
@@ -545,8 +554,8 @@
                 , row
           :examples $ []
           :schema $ quote $ Fn
-            List $ List $ Option app.schema/Cell
-            -> $ List $ List (Option app.schema/Cell)
+            List $ List $ Option schema/Cell
+            -> $ List $ List (Option schema/Cell)
         'move-shape $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn move-shape (store piece step)
             let
@@ -556,7 +565,7 @@
                 with-piece store $ &struct:assoc piece :position pos
                 , store
           :examples $ []
-          :schema $ quote $ Fn app.schema/GameState app.schema/FallingPiece (List Number) (-> app.schema/GameState)
+          :schema $ quote $ Fn schema/GameState schema/FallingPiece (List Number) (-> schema/GameState)
         'new-piece $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn new-piece ()
             let
@@ -568,7 +577,7 @@
                   , 'Number
               schema/FallingPiece :pick ([] a b) :position $ [] 1 $ * 0.5 (dec grid-size)
           :examples $ []
-          :schema $ quote $ Fn (-> app.schema/FallingPiece) (:features :js-ffi)
+          :schema $ quote $ Fn (-> schema/FallingPiece) (:features :js-ffi)
         'quick-move $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn quick-move (store piece step)
             loop
@@ -580,7 +589,7 @@
                   recur next
                   with-piece store $ &struct:assoc piece :position at
           :examples $ []
-          :schema $ quote $ Fn app.schema/GameState app.schema/FallingPiece (List Number) (-> app.schema/GameState)
+          :schema $ quote $ Fn schema/GameState schema/FallingPiece (List Number) (-> schema/GameState)
         'set-cell $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn set-cell (grid pos cell)
             let
@@ -590,10 +599,10 @@
               assoc grid y $ assoc row x cell
           :examples $ []
           :schema $ quote $ Fn
-            List $ List $ Option app.schema/Cell
+            List $ List $ Option schema/Cell
             List Number
-            Option app.schema/Cell
-            -> $ List $ List (Option app.schema/Cell)
+            Option schema/Cell
+            -> $ List $ List (Option schema/Cell)
         'updater $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn updater (store op)
             match op
@@ -612,19 +621,21 @@
                 match (:piece store)
                   (:none) store
                   (:some piece) (change-shape store piece)
-              (:move step)
+              (:move direction)
                 match (:piece store)
                   (:none) store
-                  (:some piece) (move-shape store piece step)
-              (:move-most step)
+                  (:some piece)
+                    move-shape store piece $ direction-step direction
+              (:move-most direction)
                 match (:piece store)
                   (:none) store
-                  (:some piece) (quick-move store piece step)
+                  (:some piece)
+                    quick-move store piece $ direction-step direction
               (:reset) schema/store
               (:toggle-pause)
                 &struct:assoc store :paused? $ not $ :paused? store
           :examples $ []
-          :schema $ quote $ Fn app.schema/GameState app.schema/GameOp (-> app.schema/GameState) (:features :js-ffi)
+          :schema $ quote $ Fn schema/GameState schema/GameOp (-> schema/GameState) (:features :js-ffi)
         'valid-put? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn valid-put? (pick pos grid)
             let
@@ -636,7 +647,7 @@
               every? real-cells $ fn (p) (empty-at? grid p)
           :examples $ []
           :schema $ quote $ Fn (List Number) (List Number)
-            List $ List $ Option app.schema/Cell
+            List $ List $ Option schema/Cell
             -> Bool
             :features :js-ffi
           :tests $ [] $ %{} 'TestEntry (:name |empty-grid-and-occupied-cell)
@@ -650,9 +661,9 @@
                   map row $ fn (cell) schema/filled-cell
         'with-piece $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn with-piece (store piece)
-            &struct:assoc store :piece $ Option :some piece
+            &struct:assoc store :piece $ Some piece
           :examples $ []
-          :schema $ quote $ Fn app.schema/GameState app.schema/FallingPiece (-> app.schema/GameState)
+          :schema $ quote $ Fn schema/GameState schema/FallingPiece (-> schema/GameState)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.updater
           :require
