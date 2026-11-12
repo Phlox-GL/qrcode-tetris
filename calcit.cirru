@@ -507,9 +507,9 @@
                     new-grid $ mark-collapsing $ .foldl real-cells grid
                       fn (acc pos)
                         hint-fn $ Fn
-                          List $ List $ Option app.schema/Cell
+                          List $ List $ Option schema/Cell
                           List Number
-                          -> $ List $ List (Option app.schema/Cell)
+                          -> $ List $ List (Option schema/Cell)
                         set-cell acc pos schema/filled-cell
                   &struct:assoc
                     with-piece store $ new-piece
