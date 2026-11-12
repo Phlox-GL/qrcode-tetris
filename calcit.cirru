@@ -115,14 +115,14 @@
               js/parseInt $ .unwrap-or (get-env |size) |31
               , 'Number
           :examples $ []
-          :schema $ quote $ Fn (-> Number) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Number) (:features :io :js-ffi)
         'detect-tick-interval $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn detect-tick-interval ()
             decode-map-as
               js/parseInt $ .unwrap-or (get-env |interval) |300
               , 'Number
           :examples $ []
-          :schema $ quote $ Fn (-> Number) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Number) (:features :io :js-ffi)
         'dev? $ %{} 'CodeEntry (:doc |)
           :code $ quote $ def dev?
             = |dev $ .unwrap-or (get-env |mode) |release
@@ -159,7 +159,7 @@
             reset! *store $ updater @*store op
             , &unit
           :examples $ []
-          :schema $ quote $ Fn schema/GameOp (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn schema/GameOp (-> Unit) (:features :js-ffi :state)
         'main! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn main! () (; js/console.log PIXI)
             if dev? $ load-console-formatter!
@@ -194,7 +194,7 @@
                   , nil
             println "|App Started"
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
         'reload! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn reload! ()
             if (nil? build-errors)
@@ -205,12 +205,12 @@
               hud! |error build-errors
             , &unit
           :examples $ []
-          :schema $ quote $ Fn (-> Unit)
+          :schema $ quote $ Fn (-> Unit) (:features :io :state)
         'render-app! $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn render-app! ()
             render! (comp-container @*store) @*dispatch-fn $ {}
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi)
+          :schema $ quote $ Fn (-> Unit) (:features :js-ffi :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require (|pixi.js :as PIXI)
