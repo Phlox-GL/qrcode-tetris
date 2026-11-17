@@ -79,7 +79,7 @@
                     :style $ {} (:font-size 24) (:fill |red) (:font-family "|Josefin Sans")
                   []
           :examples $ []
-          :schema $ quote $ Fn app.schema/GameState (-> phlox.schema/PhloxElement) (:features :js-ffi)
+          :schema $ quote $ Fn app.schema/GameState (-> phlox.schema/PhloxElement) (:features :js-ffi :state)
         'concat-all $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defn concat-all (xs)
             .foldl xs ([])
@@ -149,7 +149,7 @@
           :code $ quote $ defref *dispatch-fn dispatch!
           :examples $ []
           :schema $ quote $ Ref
-            Fn schema/GameOp (-> Unit) (:features :js-ffi)
+            Fn schema/GameOp (-> Unit) (:features :js-ffi :state)
         '*store $ %{} 'CodeEntry (:doc |)
           :code $ quote $ defref *store schema/store
           :examples $ []
@@ -210,7 +210,7 @@
           :code $ quote $ defn render-app! ()
             render! (comp-container @*store) @*dispatch-fn $ {}
           :examples $ []
-          :schema $ quote $ Fn (-> Unit) (:features :js-ffi :state)
+          :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
       :ns $ %{} 'NsEntry (:doc |)
         :code $ quote $ ns app.main
           :require (|pixi.js :as PIXI)
