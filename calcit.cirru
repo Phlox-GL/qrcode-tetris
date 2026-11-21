@@ -33,7 +33,6 @@
                           List Number
                           -> $ Set $ List Number
                         include acc x
-              ; println $ .unwrap-or (get store :failed?) nil
               container
                 {} $ :position $ [] 0 0
                 rect $ {}
@@ -189,9 +188,7 @@
                   @*dispatch-fn $ schema/GameOp :move $ schema/MoveDirection :right
                 "| " $ @*dispatch-fn $ schema/GameOp :move-most (schema/MoveDirection :down)
                 |Enter $ @*dispatch-fn $ schema/GameOp :toggle-pause
-                _ $ do
-                  println |Event: $ .-key event
-                  , nil
+                _ $ println |Event: $ .-key event
             println "|App Started"
           :examples $ []
           :schema $ quote $ Fn (-> Unit) (:features :io :js-ffi :state)
