@@ -177,13 +177,16 @@
             js/window.addEventListener |keydown $ fn (event)
               match (.-key event)
                 |ArrowUp $ @*dispatch-fn $ schema/GameOp :rotate
-                |ArrowDown $ if (.-shiftKey event)
+                |ArrowDown $ if
+                  contract/expect-bool |KeyboardEvent.shiftKey $ .-shiftKey event
                   @*dispatch-fn $ schema/GameOp :move-most $ schema/MoveDirection :down
                   @*dispatch-fn $ schema/GameOp :move $ schema/MoveDirection :down
-                |ArrowLeft $ if (.-shiftKey event)
+                |ArrowLeft $ if
+                  contract/expect-bool |KeyboardEvent.shiftKey $ .-shiftKey event
                   @*dispatch-fn $ schema/GameOp :move-most $ schema/MoveDirection :left
                   @*dispatch-fn $ schema/GameOp :move $ schema/MoveDirection :left
-                |ArrowRight $ if (.-shiftKey event)
+                |ArrowRight $ if
+                  contract/expect-bool |KeyboardEvent.shiftKey $ .-shiftKey event
                   @*dispatch-fn $ schema/GameOp :move-most $ schema/MoveDirection :right
                   @*dispatch-fn $ schema/GameOp :move $ schema/MoveDirection :right
                 "| " $ @*dispatch-fn $ schema/GameOp :move-most (schema/MoveDirection :down)
@@ -217,6 +220,7 @@
             app.config :refer $ dev?
             app.config :as config
             app.updater :refer $ updater
+            js-ffi.contract :as contract
             |fontfaceobserver-es :as FontFaceObserver
             |./calcit.build-errors :default build-errors
             |bottom-tip :default hud!
